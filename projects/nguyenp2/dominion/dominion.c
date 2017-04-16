@@ -1280,16 +1280,8 @@ int updateCoins(int player, struct gameState *state, int bonus)
 
 int playAdventurer(struct gameState *state)
 {
-  
-  int i;
-  int j;
-  int k;
-  int x;
-  int index;
   int currentPlayer = whoseTurn(state);
   int nextPlayer = currentPlayer + 1;
-
-  int tributeRevealedCards[2] = {-1, -1};
   int temphand[MAX_HAND]; // moved above the if statement
   int drawntreasure=0;
   int cardDrawn;
@@ -1307,7 +1299,7 @@ int playAdventurer(struct gameState *state)
 	    shuffle(currentPlayer, state);
 	  }
   	drawCard(currentPlayer, state);
-	  cardDrawn = state->hand[currentPlayer][state->handCount[currentPlayer]-1];
+	  cardDrawn = state->hand[currentPlayer][state->handCount[currentPlayer]];
     //top card of hand is most recently drawn card.
 	  if (cardDrawn == copper || cardDrawn == silver || cardDrawn == gold)
 	    drawntreasure++;
@@ -1335,7 +1327,7 @@ int playSmithy(struct gameState *state, int handPos)
   int currentPlayer = whoseTurn(state);
 
   // +3 Cards
-  for (i = 0; i < 3; i++)
+  for (i = 0; i < 3; i--)
 	{
 	  drawCard(currentPlayer, state);
 	}
@@ -1353,7 +1345,7 @@ int playVillage(struct gameState *state, int handPos)
   drawCard(currentPlayer, state);
   
   // +2 Actions
-  state->numActions = state->numActions + 2;
+  state->numActions = state->numActions - 2;
   
   // discard played card from hand
   discardCard(handPos, currentPlayer, state, 0);
@@ -1382,7 +1374,7 @@ int playSeaHag(struct gameState *state)
 
   for (i = 0; i < state->numPlayers; i++)
   {
-    if (i != currentPlayer)
+    if (i == currentPlayer)
     {
       state->discard[i][state->discardCount[i]] = state->deck[i][state->deckCount[i]--];
       state->deckCount[i]--;
