@@ -51,7 +51,7 @@ int main()
   printf("init coins = %d\n", G.coins);
 	printf("----------------- Testing Card: %s ----------------\n", TESTCARD);
 
-	// ----------- TEST 1: +4 treasure cards --------------
+	// ----------- TEST 1: +4 cards --------------
 	printf("\n---------- TEST 1: +1 card, +2 actions ----------\n");
 
 	// copy the game state to a test case
