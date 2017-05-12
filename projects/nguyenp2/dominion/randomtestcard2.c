@@ -1,9 +1,9 @@
 /******************************************************************
- * randomtestcard1.c
+ * randomtestcard2.c
  * Author: Peter Nguyen
  * Date: 5/14/17
  * CS362-400
- * Description: Random test generator for the card Village
+ * Description: Random test generator for the card Great Hall
  *****************************************************************/
 
 #include "dominion.h"
@@ -13,51 +13,87 @@
 #include <assert.h>
 #include "rngs.h"
 
-#define NUM_TESTS 50
+#define NUM_TESTS 10
 
-int checkVillage(int p, struct gameState *post, int* failCount)
+int checkGreatHall(int p, struct gameState *post, int* failCount)
 {
    int handpos = 0, choice1 = 0, choice2 = 0, choice3 = 0, bonus = 0;
    struct gameState pre;
    memcpy (&pre, post, sizeof(struct gameState));
 
-   int result;
+   printf("\nhand pre: ");
+   int i;
+   for (i = 0; i < pre.handCount[p] + 1; i++)
+      printf("%d  ", pre.hand[p][i]);
+   printf("\n");
 
-   result = cardEffect(village, choice1, choice2, choice3, post, handpos, &bonus);
+   int result;
+   result = cardEffect(great_hall, choice1, choice2, choice3, post, handpos, &bonus);
 
    int handDiscardedCount = 1;
    int deckDiscardedCount = 0;
    int newCards = 1;
    int addedCoins = 0;
-   int addedActions = 2;
+   int addedActions = 1;
+
    // Add +1 card to hand
    memcpy(pre.deck[p], post->deck[p], sizeof(int) * post->deckCount[p]);
    memcpy(pre.discard[p], post->discard[p], sizeof(int) * post->discardCount[p]);
-   pre.hand[p][post->handCount[p] - 1] = post->hand[p][post->handCount[p] - 1];
+   // pre.hand[p][post->handCount[p] - 1] = post->hand[p][post->handCount[p] - 1];
+   pre.playedCards[pre.playedCardCount] = post->playedCards[pre.playedCardCount];
+   // pre.hand[p][handpos] = -1;
+   //replace discarded card with last card in hand
+   // pre.hand[p][handpos] = pre.hand[p][post->handCount[p] - 1];
+   //set last card to -1
+   // pre.hand[p][post->handCount[p] - 1] = -1;
+
+
+   pre.hand[p][handpos] = post->hand[p][handpos];
+   pre.hand[p][post->handCount[p]] = -1;
+
 
    // Add correct number of cards to hand count and adjust
    // deck count and discard count accordingly.
    pre.handCount[p] = pre.handCount[p] + newCards - handDiscardedCount;
    pre.deckCount[p] = pre.deckCount[p] - deckDiscardedCount - newCards;
-   pre.discardCount[p] = pre.discardCount[p] + deckDiscardedCount + handDiscardedCount;
+   pre.discardCount[p] = pre.discardCount[p] + deckDiscardedCount;
    pre.coins += addedCoins;
+   pre.playedCardCount++;
 
-   // Add +2 actions
+   // Add +1 action
    pre.numActions += addedActions;
 
    // Assert test results
    if (result != 0 || memcmp(&pre, post, sizeof(struct gameState)) != 0)
    {
       (*failCount)++;
+      if (result !=0)
+         printf("***Result not equal to 0\n");
       printf("////////////////////// FAILED!\n");
       printf("hand pre: %d  hand post: %d\n", pre.handCount[p], post->handCount[p]);
       printf("deck pre: %d  deck post: %d\n", pre.deckCount[p], post->deckCount[p]);
       printf("discard pre: %d  discard post: %d\n", pre.discardCount[p], post->discardCount[p]);
       printf("coins pre: %d  coins post: %d\n", pre.coins, post->coins);
-      printf("numActions pre: %d  numActions post: %d\n\n", pre.numActions, post->numActions);
+      printf("numActions pre: %d  numActions post: %d\n", pre.numActions, post->numActions);
+      printf("playedCardCount pre: %d  playedCardCount post: %d\n", pre.playedCardCount, post->playedCardCount);
+      printf("hand pre: ");
+      int i;
+      for (i = 0; i < pre.handCount[p] + 1; i++)
+         printf("%d  ", pre.hand[p][i]);
+      printf("\nhand pst: ");
+      for (i = 0; i < post->handCount[p] + 1; i++)
+         printf("%d  ", post->hand[p][i]);
+      printf("\n\n");
    }
    else
       printf(">> PASSED <<\n");
+      printf("hand pre: ");
+      for (i = 0; i < pre.handCount[p] + 1; i++)
+         printf("%d  ", pre.hand[p][i]);
+      printf("\nhand pst: ");
+      for (i = 0; i < post->handCount[p] + 1; i++)
+         printf("%d  ", post->hand[p][i]);
+      printf("\n\n");
 }
 
 int main ()
@@ -74,7 +110,7 @@ int main ()
    struct gameState G;
    int testDeck[5] = {minion, mine, cutpurse, copper, gold};
 
-   printf ("Testing Village card\n");
+   printf ("Testing Great Hall card\n");
 
    printf ("RANDOM TESTS\n\n");
 
@@ -97,10 +133,9 @@ int main ()
       player = 0;
       G.whoseTurn = player;
       G.numActions = floor(Random() * 100);
-      printf("numActions: %d\n", G.numActions);
       G.coins = floor(Random() * 100);
-      printf("coins: %d\n", G.coins);
       G.playedCardCount = 0;
+      G.playedCards[0] = 0;
 
       /*-------------- Fill hand with random cards --------------*/
       for (p = 0; p < numPlayers; p++)
@@ -145,7 +180,7 @@ int main ()
       }
 
       printf("Test: %d   ", n);
-      checkVillage(player, &G, &failCount);
+      checkGreatHall(player, &G, &failCount);
    }
 
    if (failCount)

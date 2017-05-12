@@ -3,7 +3,7 @@
  * Author: Peter Nguyen
  * Date: 5/14/17
  * CS362-400
- * Description: Random test generator for the card Village
+ * Description: Random test generator for the card Adventurer
  *****************************************************************/
 
 #include "dominion.h"
@@ -15,35 +15,39 @@
 
 #define NUM_TESTS 50
 
-int checkVillage(int p, struct gameState *post, int* failCount)
+int checkAdventurer(int p, struct gameState *post, int treasureCount,
+      int deckDiscardedCount, int addedCoins, int* failCount)
 {
    int handpos = 0, choice1 = 0, choice2 = 0, choice3 = 0, bonus = 0;
+   int handDiscardedCount;
    struct gameState pre;
    memcpy (&pre, post, sizeof(struct gameState));
 
    int result;
+   result = cardEffect(adventurer, choice1, choice2, choice3, post, handpos, &bonus);
 
-   result = cardEffect(village, choice1, choice2, choice3, post, handpos, &bonus);
+   handDiscardedCount = 0; // 1 is correct value (discard Adventurer itself)
 
-   int handDiscardedCount = 1;
-   int deckDiscardedCount = 0;
-   int newCards = 1;
-   int addedCoins = 0;
-   int addedActions = 2;
-   // Add +1 card to hand
-   memcpy(pre.deck[p], post->deck[p], sizeof(int) * post->deckCount[p]);
-   memcpy(pre.discard[p], post->discard[p], sizeof(int) * post->discardCount[p]);
-   pre.hand[p][post->handCount[p] - 1] = post->hand[p][post->handCount[p] - 1];
+   // if (treasureCount > 0)
+   // {
+      // memcpy(pre.hand[p], post->hand[p], sizeof(int) * post->handCount[p]);
+      memcpy(pre.deck[p], post->deck[p], sizeof(int) * post->deckCount[p]);
+      memcpy(pre.discard[p], post->discard[p], sizeof(int) * post->discardCount[p]);
+      if (treasureCount == 1)
+         pre.hand[p][post->handCount[p] - 1] = post->hand[p][post->handCount[p] - 1];
+      else if (treasureCount == 2)
+      {
+         pre.hand[p][post->handCount[p] - 2] = post->hand[p][post->handCount[p] - 2];
+         pre.hand[p][post->handCount[p] - 1] = post->hand[p][post->handCount[p] - 1];
+      }
 
-   // Add correct number of cards to hand count and adjust
-   // deck count and discard count accordingly.
-   pre.handCount[p] = pre.handCount[p] + newCards - handDiscardedCount;
-   pre.deckCount[p] = pre.deckCount[p] - deckDiscardedCount - newCards;
-   pre.discardCount[p] = pre.discardCount[p] + deckDiscardedCount + handDiscardedCount;
-   pre.coins += addedCoins;
-
-   // Add +2 actions
-   pre.numActions += addedActions;
+      // Add correct number of treasure cards to hand count and adjust
+      // deck count and discard count accordingly.
+      pre.handCount[p] = pre.handCount[p] + treasureCount - handDiscardedCount;
+      pre.deckCount[p] = pre.deckCount[p] - deckDiscardedCount - treasureCount;
+      pre.discardCount[p] = pre.discardCount[p] + deckDiscardedCount + handDiscardedCount;
+      // pre.coins += addedCoins; // Add this for correct test
+   // }
 
    // Assert test results
    if (result != 0 || memcmp(&pre, post, sizeof(struct gameState)) != 0)
@@ -53,8 +57,8 @@ int checkVillage(int p, struct gameState *post, int* failCount)
       printf("hand pre: %d  hand post: %d\n", pre.handCount[p], post->handCount[p]);
       printf("deck pre: %d  deck post: %d\n", pre.deckCount[p], post->deckCount[p]);
       printf("discard pre: %d  discard post: %d\n", pre.discardCount[p], post->discardCount[p]);
-      printf("coins pre: %d  coins post: %d\n", pre.coins, post->coins);
-      printf("numActions pre: %d  numActions post: %d\n\n", pre.numActions, post->numActions);
+      printf("treasureCount: %d  deckDiscardedCount: %d  addedCoins: %d\n\n",
+          treasureCount, deckDiscardedCount, addedCoins);
    }
    else
       printf(">> PASSED <<\n");
@@ -62,6 +66,7 @@ int checkVillage(int p, struct gameState *post, int* failCount)
 
 int main ()
 {
+
    int i, j, n, r, p, deckCount, discardCount, handCount;
    int failCount = 0;
 
@@ -74,7 +79,11 @@ int main ()
    struct gameState G;
    int testDeck[5] = {minion, mine, cutpurse, copper, gold};
 
-   printf ("Testing Village card\n");
+   int treasureCount[numPlayers]; // keeps track of treasure cards gained
+   int deckDiscardedCount[numPlayers]; // keeps track of cards discarded from deck
+   int addedCoins[numPlayers]; // keeps track of coins gained from treasure cards
+
+   printf ("Testing Adventurer card\n");
 
    printf ("RANDOM TESTS\n\n");
 
@@ -86,21 +95,15 @@ int main ()
 
    for (n = 0; n < NUM_TESTS; n++)
    {
-      /*-------------- Fill game state with random values --------------*/
+      // Fill game state with random values
       for (i = 0; i < sizeof(struct gameState); i++)
       {
          ((char*)&G)[i] = floor(Random() * 256);
       }
 
-      /*-------- Generate random values for key state variables --------*/
       // player = floor(Random() * numPlayers);
       player = 0;
       G.whoseTurn = player;
-      G.numActions = floor(Random() * 100);
-      printf("numActions: %d\n", G.numActions);
-      G.coins = floor(Random() * 100);
-      printf("coins: %d\n", G.coins);
-      G.playedCardCount = 0;
 
       /*-------------- Fill hand with random cards --------------*/
       for (p = 0; p < numPlayers; p++)
@@ -122,10 +125,33 @@ int main ()
          // G.deckCount[p] = 5;
          int randDeck[G.deckCount[p]];
 
+         treasureCount[p] = 0;
+         deckDiscardedCount[p] = 0;
+         addedCoins[p] = 0;
          for (j = G.deckCount[p] - 1; j >= 0; j--)
          {
             randDeck[j] = floor(Random() * treasure_map);
            //  randDeck[j] = testDeck[j];
+
+            // Keep track of treasure cards and discarded cards
+            if (randDeck[j] == copper || randDeck[j] == silver || randDeck[j] == gold)
+            {
+               if (treasureCount[p] < 2)
+               {
+                  treasureCount[p]++;
+                  if (randDeck[j] == copper)
+                     addedCoins[p] += 1;
+                  else if (randDeck[j] == silver)
+                     addedCoins[p] += 2;
+                  else if (randDeck[j] == gold)
+                     addedCoins[p] += 3;
+               }
+            }
+            else
+            {
+               if (treasureCount[p] < 2)
+                  deckDiscardedCount[p]++;
+            }
          }
          memcpy(G.deck[p], randDeck, sizeof(int) * G.deckCount[p]);
          // memcpy(G.deck[p], testDeck, sizeof(int) * 5);
@@ -145,7 +171,8 @@ int main ()
       }
 
       printf("Test: %d   ", n);
-      checkVillage(player, &G, &failCount);
+      checkAdventurer(player, &G, treasureCount[player],
+            deckDiscardedCount[player], addedCoins[player], &failCount);
    }
 
    if (failCount)
