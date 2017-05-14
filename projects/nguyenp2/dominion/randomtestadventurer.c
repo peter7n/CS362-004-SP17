@@ -13,7 +13,7 @@
 #include <assert.h>
 #include "rngs.h"
 
-#define NUM_TESTS 50
+#define NUM_TESTS 2000
 
 int checkAdventurer(int p, struct gameState *post, int treasureCount,
       int deckDiscardedCount, int addedCoins, int* failCount)
@@ -26,28 +26,23 @@ int checkAdventurer(int p, struct gameState *post, int treasureCount,
    int result;
    result = cardEffect(adventurer, choice1, choice2, choice3, post, handpos, &bonus);
 
-   handDiscardedCount = 0; // 1 is correct value (discard Adventurer itself)
+   handDiscardedCount = 1; // discard the Adventurer card itself
 
-   // if (treasureCount > 0)
-   // {
-      // memcpy(pre.hand[p], post->hand[p], sizeof(int) * post->handCount[p]);
-      memcpy(pre.deck[p], post->deck[p], sizeof(int) * post->deckCount[p]);
-      memcpy(pre.discard[p], post->discard[p], sizeof(int) * post->discardCount[p]);
-      if (treasureCount == 1)
-         pre.hand[p][post->handCount[p] - 1] = post->hand[p][post->handCount[p] - 1];
-      else if (treasureCount == 2)
-      {
-         pre.hand[p][post->handCount[p] - 2] = post->hand[p][post->handCount[p] - 2];
-         pre.hand[p][post->handCount[p] - 1] = post->hand[p][post->handCount[p] - 1];
-      }
+   memcpy(pre.deck[p], post->deck[p], sizeof(int) * post->deckCount[p]);
+   memcpy(pre.discard[p], post->discard[p], sizeof(int) * post->discardCount[p]);
+   if (treasureCount == 1)
+      pre.hand[p][post->handCount[p] - 1] = post->hand[p][post->handCount[p] - 1];
+   else if (treasureCount == 2)
+   {
+      pre.hand[p][post->handCount[p] - 2] = post->hand[p][post->handCount[p] - 2];
+      pre.hand[p][post->handCount[p] - 1] = post->hand[p][post->handCount[p] - 1];
+   }
 
-      // Add correct number of treasure cards to hand count and adjust
-      // deck count and discard count accordingly.
-      pre.handCount[p] = pre.handCount[p] + treasureCount - handDiscardedCount;
-      pre.deckCount[p] = pre.deckCount[p] - deckDiscardedCount - treasureCount;
-      pre.discardCount[p] = pre.discardCount[p] + deckDiscardedCount + handDiscardedCount;
-      // pre.coins += addedCoins; // Add this for correct test
-   // }
+   // Add correct number of treasure cards to hand count and adjust
+   // deck count and discard count accordingly.
+   pre.handCount[p] = pre.handCount[p] + treasureCount - handDiscardedCount;
+   pre.deckCount[p] = pre.deckCount[p] - deckDiscardedCount - treasureCount;
+   pre.discardCount[p] = pre.discardCount[p] + deckDiscardedCount;
 
    // Assert test results
    if (result != 0 || memcmp(&pre, post, sizeof(struct gameState)) != 0)
@@ -122,7 +117,6 @@ int main ()
       for (p = 0; p < numPlayers; p++)
       {
          G.deckCount[p] = floor(Random() * MAX_DECK);
-         // G.deckCount[p] = 5;
          int randDeck[G.deckCount[p]];
 
          treasureCount[p] = 0;
@@ -131,7 +125,6 @@ int main ()
          for (j = G.deckCount[p] - 1; j >= 0; j--)
          {
             randDeck[j] = floor(Random() * treasure_map);
-           //  randDeck[j] = testDeck[j];
 
             // Keep track of treasure cards and discarded cards
             if (randDeck[j] == copper || randDeck[j] == silver || randDeck[j] == gold)
@@ -154,7 +147,6 @@ int main ()
             }
          }
          memcpy(G.deck[p], randDeck, sizeof(int) * G.deckCount[p]);
-         // memcpy(G.deck[p], testDeck, sizeof(int) * 5);
       }
 
       /*-------------- Fill discard pile with random cards --------------*/

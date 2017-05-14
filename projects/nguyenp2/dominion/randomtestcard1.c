@@ -13,7 +13,7 @@
 #include <assert.h>
 #include "rngs.h"
 
-#define NUM_TESTS 50
+#define NUM_TESTS 2000
 
 int checkVillage(int p, struct gameState *post, int* failCount)
 {
@@ -30,17 +30,21 @@ int checkVillage(int p, struct gameState *post, int* failCount)
    int newCards = 1;
    int addedCoins = 0;
    int addedActions = 2;
+
    // Add +1 card to hand
    memcpy(pre.deck[p], post->deck[p], sizeof(int) * post->deckCount[p]);
    memcpy(pre.discard[p], post->discard[p], sizeof(int) * post->discardCount[p]);
-   pre.hand[p][post->handCount[p] - 1] = post->hand[p][post->handCount[p] - 1];
+   pre.hand[p][handpos] = post->hand[p][handpos];
+   pre.hand[p][post->handCount[p]] = -1;
+   pre.playedCards[pre.playedCardCount] = post->playedCards[pre.playedCardCount];
 
    // Add correct number of cards to hand count and adjust
    // deck count and discard count accordingly.
    pre.handCount[p] = pre.handCount[p] + newCards - handDiscardedCount;
    pre.deckCount[p] = pre.deckCount[p] - deckDiscardedCount - newCards;
-   pre.discardCount[p] = pre.discardCount[p] + deckDiscardedCount + handDiscardedCount;
+   pre.discardCount[p] = pre.discardCount[p] + deckDiscardedCount;
    pre.coins += addedCoins;
+   pre.playedCardCount++;
 
    // Add +2 actions
    pre.numActions += addedActions;
@@ -54,7 +58,8 @@ int checkVillage(int p, struct gameState *post, int* failCount)
       printf("deck pre: %d  deck post: %d\n", pre.deckCount[p], post->deckCount[p]);
       printf("discard pre: %d  discard post: %d\n", pre.discardCount[p], post->discardCount[p]);
       printf("coins pre: %d  coins post: %d\n", pre.coins, post->coins);
-      printf("numActions pre: %d  numActions post: %d\n\n", pre.numActions, post->numActions);
+      printf("numActions pre: %d  numActions post: %d\n", pre.numActions, post->numActions);
+      printf("playedCardCount pre: %d  playedCardCount post: %d\n\n", pre.playedCardCount, post->playedCardCount);
    }
    else
       printf(">> PASSED <<\n");
@@ -93,13 +98,10 @@ int main ()
       }
 
       /*-------- Generate random values for key state variables --------*/
-      // player = floor(Random() * numPlayers);
       player = 0;
       G.whoseTurn = player;
       G.numActions = floor(Random() * 100);
-      printf("numActions: %d\n", G.numActions);
       G.coins = floor(Random() * 100);
-      printf("coins: %d\n", G.coins);
       G.playedCardCount = 0;
 
       /*-------------- Fill hand with random cards --------------*/

@@ -119,6 +119,27 @@ unittestresults.out: unittest1.c unittest2.c unittest3.c unittest4.c cardtest1.c
 	gcov -b dominion.c >> unittestresults.out
 	cat dominion.c.gcov >> unittestresults.out
 
+randomtestresults.out: randomtestcard1.c randomtestcard2.c randomtestadventurer.c dominion.c rngs.c
+		echo "Random Test Results:" > randomtestresults.out
+
+		echo "randomtestcard1.c:" >> randomtestresults.out
+		gcc -o randomtestcard1 dominion.c rngs.c randomtestcard1.c $(CFLAGS)
+		randomtestcard1 >> randomtestresults.out
+		gcov -b dominion.c >> randomtestresults.out
+		cat dominion.c.gcov >> randomtestresults.out
+
+		echo "randomtestcard2.c:" >> randomtestresults.out
+		gcc -o randomtestcard2 dominion.c rngs.c randomtestcard2.c $(CFLAGS)
+		randomtestcard2 >> randomtestresults.out
+		gcov -b dominion.c >> randomtestresults.out
+		cat dominion.c.gcov >> randomtestresults.out
+
+		echo "randomtestadventurer.c:" >> randomtestresults.out
+		gcc -o randomtestadventurer dominion.c rngs.c randomtestadventurer.c $(CFLAGS)
+		randomtestadventurer >> randomtestresults.out
+		gcov -b dominion.c >> randomtestresults.out
+		cat dominion.c.gcov >> randomtestresults.out
+
 all: playdom player testDrawCard testBuyCard badTestDrawCard testUpdateCoins unittest1 unittest2 unittest3 unittest4 cardtest1 cardtest2 cardtest3 cardtest4 randomtestadventurer randomtestcard1 randomtestcard2
 
 clean:
