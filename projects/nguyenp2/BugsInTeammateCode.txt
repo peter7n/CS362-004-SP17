@@ -1,0 +1,134 @@
+Author: Peter Nguyen
+Date: 5/28/17
+CS362-400
+
+Bug Reports
+
+(Bug reports for tests run on dominion code of team member ONID ID sunxiao)
+
+Bug ID #: 1
+Bug name: Smithy card adds wrong number of cards to wrong player
+Symptoms: Running cardtest1, which tests the smithy card, produced the following failed tests:
+---------- TEST 1: +3 cards ----------
+hand count = 4, expected = 7
+TEST FAILED!
+deck count = 5, expected = 2
+TEST FAILED!
+coins = 4, expected = 4
+
+TEST: cards come from player0's own deck
+player0 deck count = 5, expected = 2
+TEST FAILED!
+player1 deck count = 8, expected = 10
+TEST FAILED!
+
+TEST: no state change occurs for other player (player1)
+player1 hand count = 2, expected = 0
+TEST FAILED!
+player1 deck count = 8, expected = 10
+TEST FAILED!
+player1 discard count = 0, expected = 0
+Cause: In the drawCard loop which adds +3 cards to the current player’s hand, there is a bug which adds the cards to the next player rather than the current player. In addition, the wrong number of cards is added because the loop should be i < 3:
+	for (i = 0; i <= 3; i+=2)
+	{
+	  drawCard(currentPlayer+1, state);
+	}
+Severity: High. This will cause the game to behave incorrectly and erratically whenever the Smithy card is played.
+Priority: High. Should be fixed as soon as possible.
+
+Bug ID #: 2
+Bug name: Adventurer card adds wrong number of cards to hand
+Symptoms: Running cardtest2.c unit test produced the following failed results:
+---------- TEST 1: +2 treasure cards {minion, mine, cutpurse, copper, gold} ----------
+hand count = 5, expected = 6
+//// TEST FAILED! ////
+deck count = 5, expected = 3
+//// TEST FAILED! ////
+discard count = 0, expected = 1
+//// TEST FAILED! ////
+In addition, running randomtestadventurer.c caused all 2000 tests to fail with the hand count being 1 less than expected and deck and discard counts being unpredictable values.
+Cause: The loop which draws treasure cards doesn’t execute correctly because it loops under the condition that drawntreasure >=2 rather than < 2:
+	while(drawntreasure >= 2){
+Severity: High. This will cause the game to behave incorrectly and erratically whenever the Adventurer card is played.
+Priority: High. Should be fixed as soon as possible.
+
+Bug ID #: 3
+Bug name: Council Room card draws cards for wrong player and adds wrong number of buys
+Symptoms: Running cardtest3.c produced the following failed results:
+---------- TEST 1: +4 cards, +1 buy, other player +1 card in hand ----------
+hand count = 4, expected = 8
+//// TEST FAILED! ////
+deck count = 5, expected = 1
+//// TEST FAILED! ////
+discard count = 0, expected = 0
+coins = 4, expected = 4
+
+TEST: +1 buy
+buys count = 1, expected = 2
+//// TEST FAILED! ////
+
+TEST: +1 card to player1's hand
+player1 hand count = 0, expected = 1
+//// TEST FAILED! ////
+player1 deck count = 10, expected = 9
+//// TEST FAILED! ////
+player1 discard count = 0, expected = 0
+coins = 4, expected = 4
+Cause: The drawcard function is called on currentPlayer - 1 rather than currentPlayer:
+	  drawCard(currentPlayer-1, state);
+Also, numBuys is incremented by 2 rather than 1:
+      state->numBuys+2;
+Severity: High. This will cause the game to behave incorrectly and erratically whenever the Council Room card is played.
+Priority: High. Should be fixed as soon as possible.
+
+Bug ID #: 4
+Bug name: Village card produces unexpected amounts in the deck and discard pile
+Symptoms: After running randomtestcard1.c, only three tests failed out of 2000. Those three had the following similarities: deck pre (expected) amount is -1 and discard post (actual) is 0. The failed tests are logged below:
+Test: 540   ////////////////////// FAILED!
+hand pre: 177  hand post: 177
+deck pre: -1  deck post: 250
+discard pre: 251  discard post: 0
+coins pre: 45  coins post: 45
+numActions pre: 14  numActions post: 14
+playedCardCount pre: 1  playedCardCount post: 1
+
+Test: 974   ////////////////////// FAILED!
+hand pre: 133  hand post: 133
+deck pre: -1  deck post: 165
+discard pre: 166  discard post: 0
+coins pre: 7  coins post: 7
+numActions pre: 2  numActions post: 2
+playedCardCount pre: 1  playedCardCount post: 1
+
+Test: 1498   ////////////////////// FAILED!
+hand pre: 119  hand post: 119
+deck pre: -1  deck post: 338
+discard pre: 339  discard post: 0
+coins pre: 66  coins post: 66
+numActions pre: 100  numActions post: 100
+playedCardCount pre: 1  playedCardCount post: 1
+Cause:  Since the expected deck amount is a negative number, this seems to indicate that there may be an issue with the random test itself as opposed to the source code being tested. Further investigation is required.
+Severity: Low. This failure occurred in a very low percentage (3 out of 2000) tests, and may be possibly due to a flaw in the unit test itself.
+Priority: Low. However, further investigation is required.
+
+Bug ID #: 5
+Bug name: Great Hall card produces unexpected amounts in the deck and discard pile
+Symptoms: After running randomtestcard2.c, only two tests failed out of 2000. Those three had the following similarities: deck pre (expected) amount is -1 and discard post (actual) is 0. The failed tests are logged below:
+Test: 540   ////////////////////// FAILED!
+hand pre: 177  hand post: 177
+deck pre: -1  deck post: 250
+discard pre: 251  discard post: 0
+coins pre: 45  coins post: 45
+numActions pre: 13  numActions post: 13
+playedCardCount pre: 1  playedCardCount post: 1
+
+Test: 974   ////////////////////// FAILED!
+hand pre: 133  hand post: 133
+deck pre: -1  deck post: 165
+discard pre: 166  discard post: 0
+coins pre: 7  coins post: 7
+numActions pre: 1  numActions post: 1
+playedCardCount pre: 1  playedCardCount post: 1
+Cause: As was the case for Bug ID# 4, since the expected deck amount is a negative number, this seems to indicate that there may be an issue with the random test itself as opposed to the source code being tested. Further investigation is required.
+Severity: Low. This failure occurred in a very low percentage (2 out of 2000) tests, and may be possibly due to a flaw in the unit test itself.
+Priority: Low. However, further investigation is required.
